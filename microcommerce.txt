@@ -1,0 +1,153 @@
+
+# E2E BDD Test Scenarios for EasyLab Microcommerce SPA
+# Generated for https://easylab-wp.im-media.it/shop/
+# Translation: Italian → English
+# Ready for Playwright/Cypress + Cucumber BDD
+1. Product Catalog / List
+text
+Feature: Product Catalog Display
+  Scenario: Initial catalog display
+    Given the user opens the shop page
+    Then sees the product list with image, name and price
+    And sees the cart icon with item counter [file:16]
+
+  Scenario: Open product detail modal
+    Given the product list is visible
+    When clicks on "Prova 3" product
+    Then the product detail modal opens with large image, title, price and description [file:18]
+
+  Scenario: Close product detail modal
+    Given the product detail modal is open
+    When clicks "Close" or the X button
+    Then the modal closes and returns to catalog view [file:18]
+2. Product Detail & Add to Cart
+text
+Feature: Product Detail and Cart Operations
+  Scenario: Add single product from detail
+    Given "Prova 3" detail modal is open
+    When clicks "Add to cart" with quantity 1
+    Then "Product added to cart" toast appears
+    And cart counter increases by 1 [file:19][file:20]
+
+  Scenario: Add product with custom quantity
+    Given product detail modal is open
+    When sets quantity to 3
+    And clicks "Add to cart"
+    Then cart contains product with quantity 3
+    And cart counter increases by 3 [file:19]
+
+  Scenario: Maximum products per order limit
+    Given "maximum of 10 products per order" text is visible in detail modal
+    When tries to set quantity to 11
+    Then quantity is blocked at 10
+    And warning message appears (if implemented) [file:19]
+
+  Scenario: "Go to cart" link from toast
+    Given "Product added to cart" toast is visible
+    When clicks "Go to cart"
+    Then cart modal opens [file:20]
+3. Cart Modal
+text
+Feature: Cart Modal Functionality
+  Scenario: Open cart from icon
+    Given product list is visible
+    When clicks cart icon in top right
+    Then "Cart" modal opens with product summary and total [file:16][file:21]
+
+  Scenario: Modify quantity in cart
+    Given cart modal shows product with quantity 5
+    When clicks "+"
+    Then quantity increases to 6
+    And cart total updates correctly [file:21]
+
+  Scenario: Remove product from cart
+    Given cart modal shows "Prova 3" product
+    When clicks "Remove"
+    Then "Prova 3" product is no longer listed
+    And total updates [file:21]
+
+  Scenario: Minimum order amount validation
+    Given "The minimum order amount is 70,00 €" text is visible
+    When cart total is below 70,00 €
+    Then "Proceed to Checkout" button is disabled or shows block message [file:21]
+
+  Scenario: Access checkout from cart
+    Given cart modal shows valid total (≥ 70,00 €)
+    When clicks "Proceed to Checkout"
+    Then checkout modal opens [file:21][file:17]
+4. Checkout Modal (Customer Data Form)
+text
+Feature: Checkout Form Validation
+  Scenario: Checkout form display
+    Given user is at checkout
+    Then sees all required fields: Name, Surname, Country (select), Address, ZIP, City, Province, Email, Phone Number
+    And sees "Use same address for shipping" checkbox [file:17]
+
+  Scenario: Required fields validation
+    Given checkout modal is open
+    When tries to proceed without filling required fields
+    Then validation errors appear for each required field
+    And cannot proceed to payment step [file:17]
+
+  Scenario: Format validation (email, ZIP, phone)
+    Given checkout modal is open
+    When enters invalid email, non-numeric ZIP or wrong phone format
+    Then sees specific error messages per field
+    And cannot proceed
+
+  Scenario: "Use same address for shipping" checkbox
+    Given checkbox is selected by default
+    When deselects it
+    Then shipping address section appears (if implemented)
+    And fields are independent from billing [file:17]
+
+  Scenario: Order summary in checkout
+    Given all data correctly filled
+    Then sees "Order Summary" in same modal with products list, quantities and subtotal [file:17][file:22]
+
+  Scenario: Back to cart from checkout
+    Given in checkout modal
+    When clicks "Back"
+    Then returns to cart modal with same products and quantities [file:17][file:21]
+5. Payment Step (Stripe)
+text
+Feature: Stripe Payment Integration
+  Scenario: Payment method selection
+    Given checkout form completed
+    When scrolls to "Payment Method" section
+    Then sees "Stripe" as selectable payment method [file:22]
+
+  Scenario: Proceed to Stripe
+    Given "Stripe" selected and order summary visible
+    When clicks "Proceed to payment"
+    Then redirects to test Stripe checkout page with correct amount [file:22]
+
+  Scenario: Successful payment
+    Given on test Stripe checkout
+    When enters valid test card data
+    Then redirects to site order confirmation page
+    And sees success message and order summary
+
+  Scenario: Failed/canceled payment
+    Given on Stripe checkout
+    When cancels payment or uses test card that generates error
+    Then returns to site with error message
+    And order is not confirmed
+6. Extra / Robustness Behaviors
+text
+Feature: Edge Cases and Robustness
+  Scenario: Cart persistence on refresh
+    Given cart contains products
+    When refreshes shop page
+    Then cart maintains previous products and quantities
+
+  Scenario: Direct checkout access with empty cart
+    Given cart is empty
+    When tries to access checkout URL/route directly
+    Then redirects to shop page
+    And sees "Empty cart" message (or equivalent)
+
+  Scenario: Modal responsiveness (mobile)
+    Given using mobile viewport
+    When opens product detail, cart and checkout modals
+    Then modals are fully visible, scrollable, no horizontal overflow
