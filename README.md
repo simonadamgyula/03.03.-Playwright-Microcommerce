@@ -24,6 +24,36 @@ Setting environment variables varies for each CLI environment. Make sure you use
 ## Running the tests
 Run the test with the ```npx playwright run``` command from you CLI.
 
+## Setup Gitlab CI
+
+1. Add a ```URL``` variable to you Gitlab CI variables.
+2. Setup your ```.gitlab-ci.yml``` file:
+```
+stages:
+   - test
+
+variables:
+   URL: $URL
+
+playwright_tests:
+   stage: test
+   image: mcr.microsoft.com/playwright:v1.58.2-jammy 
+
+   script:
+      - npm ci
+      - npx playwright test
+
+   allow_faliure: true
+
+   artifacts:
+      when: always
+      paths:
+         - playwright-report/
+         - test-results/
+      expire_in: 30 days
+```
+
+
 ## Test structure
 
 #### ```product-list.spec.ts```
